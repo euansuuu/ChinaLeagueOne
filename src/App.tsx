@@ -644,7 +644,7 @@ export default function ZhongjiaLeagueTest() {
                   <div className="space-y-3">
                     <CardTitle className="text-4xl font-black leading-tight md:text-6xl text-white">
                       <span className="bg-gradient-to-r from-white to-neutral-300 bg-clip-text text-transparent">
-                        CSLTI 已经过时，
+                        SBTI 已经过时，
                       </span>
                       <br />
                       现在轮到 <span className="text-emerald-400">中甲人格测试</span> 了。
