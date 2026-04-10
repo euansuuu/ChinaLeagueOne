@@ -1,28 +1,62 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RotateCcw, ChevronLeft, ChevronRight, Trophy, MapPinned, ShieldCheck, Flame, Share2 } from "lucide-react";
 
-function Card({ className = "", children }) {
+// 类型定义
+interface Option {
+  text: string;
+  delta: Record<string, number>;
+  tags: number[];
+}
+
+interface TeamType {
+  code: string;
+  name: string;
+  club: string;
+  city: string;
+  color: string;
+  motto: string;
+  description: string;
+  tags: string[];
+}
+
+interface ScoreResult {
+  winner: TeamType;
+  dims: Record<string, number>;
+  dominance: number;
+  banter: number;
+}
+
+function Card({ className = "", children }: { className?: string; children: ReactNode }) {
   return <div className={`rounded-3xl border ${className}`}>{children}</div>;
 }
 
-function CardHeader({ className = "", children }) {
+function CardHeader({ className = "", children }: { className?: string; children: ReactNode }) {
   return <div className={`p-6 ${className}`}>{children}</div>;
 }
 
-function CardContent({ className = "", children }) {
+function CardContent({ className = "", children }: { className?: string; children: ReactNode }) {
   return <div className={`px-6 pb-6 ${className}`}>{children}</div>;
 }
 
-function CardTitle({ className = "", children }) {
+function CardTitle({ className = "", children }: { className?: string; children: ReactNode }) {
   return <h2 className={className}>{children}</h2>;
 }
 
-function CardDescription({ className = "", children }) {
+function CardDescription({ className = "", children }: { className?: string; children: ReactNode }) {
   return <p className={className}>{children}</p>;
 }
 
-function Button({ className = "", variant = "default", size = "md", disabled = false, children, ...props }) {
+interface ButtonProps {
+  className?: string;
+  variant?: "default" | "outline" | "ghost";
+  size?: "md" | "lg";
+  disabled?: boolean;
+  children: ReactNode;
+  [key: string]: unknown;
+}
+
+function Button({ className = "", variant = "default", size = "md", disabled = false, children, ...props }: ButtonProps) {
   const base =
     "inline-flex items-center justify-center gap-2 rounded-2xl transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50";
   const sizes = {
@@ -42,7 +76,7 @@ function Button({ className = "", variant = "default", size = "md", disabled = f
   );
 }
 
-function Badge({ className = "", children }) {
+function Badge({ className = "", children }: { className?: string; children: ReactNode }) {
   return <span className={`inline-flex items-center rounded-full ${className}`}>{children}</span>;
 }
 
@@ -251,7 +285,7 @@ const dimensionKeys = [
   "情怀值",
 ];
 
-const questions = [
+const questions: { text: string; options: Option[] }[] = [
   {
     text: "你看一场中甲，最先在意的通常是什么？",
     options: [
@@ -528,15 +562,15 @@ function initialDimensions() {
   return Object.fromEntries(dimensionKeys.map((k) => [k, 0]));
 }
 
-function scoreResult(answers) {
-  const dims = initialDimensions();
+function scoreResult(answers: Option[]): ScoreResult {
+  const dims: Record<string, number> = initialDimensions();
   const teamScores = new Array(teamTypes.length).fill(0);
 
   answers.forEach((option) => {
     Object.entries(option.delta || {}).forEach(([k, v]) => {
-      dims[k] = (dims[k] || 0) + v;
+      dims[k] = (dims[k] || 0) + (v as number);
     });
-    (option.tags || []).forEach((idx) => {
+    (option.tags || []).forEach((idx: number) => {
       teamScores[idx] += 1;
     });
   });
@@ -583,23 +617,23 @@ function scoreResult(answers) {
   };
 }
 
-function cnMax(dims) {
+function cnMax(dims: Record<string, number>): [string, number][] {
   return Object.entries(dims)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+    .sort((a, b) => (b[1] as number) - (a[1] as number))
+    .slice(0, 5) as [string, number][];
 }
 
 export default function ZhongjiaLeagueTest() {
   const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(0);
-  const [answers, setAnswers] = useState([]);
+  const [answers, setAnswers] = useState<Option[]>([]);
   const [submitted, setSubmitted] = useState(false);
 
   const current = questions[index];
   const progress = Math.round((answers.filter(Boolean).length / questions.length) * 100);
-  const result = useMemo(() => (submitted ? scoreResult(answers) : null), [submitted, answers]);
+  const result = useMemo(() => (submitted ? scoreResult(answers) : null as ScoreResult | null), [submitted, answers]);
 
-  const handlePick = (option) => {
+  const handlePick = (option: Option) => {
     const next = [...answers];
     next[index] = option;
     setAnswers(next);
@@ -809,7 +843,7 @@ export default function ZhongjiaLeagueTest() {
                 {!readyToSubmit && <div className="text-sm text-neutral-200">请认真作答，少一题都不给你出结果。</div>}
               </div>
             </motion.div>
-          ) : (
+          ) : result ? (
             <motion.div
               key="result"
               initial={{ opacity: 0, y: 12 }}
@@ -849,7 +883,7 @@ export default function ZhongjiaLeagueTest() {
                     <CardContent className="space-y-4 text-neutral-200">
                       <p className="leading-7">{result.winner.description}</p>
                       <div className="flex flex-wrap gap-2">
-                        {result.winner.tags.map((tag) => (
+                        {result.winner.tags.map((tag: string) => (
                           <Badge key={tag} className="bg-white/10 px-3 py-1 text-white hover:bg-white/10">{tag}</Badge>
                         ))}
                         <Badge className="bg-white/10 px-3 py-1 text-white hover:bg-white/10">{result.winner.city}</Badge>
@@ -916,7 +950,7 @@ export default function ZhongjiaLeagueTest() {
                 </CardContent>
               </Card>
             </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
       </div>
     </div>
